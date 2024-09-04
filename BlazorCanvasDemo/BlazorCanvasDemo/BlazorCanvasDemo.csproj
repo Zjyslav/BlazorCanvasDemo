@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\BlazorCanvasDemo.Client\BlazorCanvasDemo.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
-    <PackageReference Include="Microsoft.JSInterop" Version="8.0.8" />
   </ItemGroup>
 
 </Project>

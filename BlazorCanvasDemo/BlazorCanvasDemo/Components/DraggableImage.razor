@@ -1,0 +1,59 @@
+﻿@using BlazorCanvasDemo.Models
+
+<img src="@Image.Source"
+        height="@Image.Height" width="@Image.Width"
+     style="position: absolute; top: @(Image.Y)px; left: @(Image.X)px;"
+        @ondrag="Drag"
+        @ondragstart="DragStart"
+        @ondragend="DragEnd" />
+
+@code {
+    [Parameter, EditorRequired]
+    public DraggableImageModel Image { get; set; } = new();
+
+    [Parameter, EditorRequired]
+    public double CanvasHeight { get; set; }
+
+    [Parameter, EditorRequired]
+    public double CanvasWidth { get; set; }
+
+    private double prevY;
+    private double prevX;
+
+    private double startX;
+    private double startY;
+
+    private void Drag(DragEventArgs e)
+    {
+        ApplyCoordinates(e.ClientX, e.ClientY);
+    }
+
+    private void DragStart(DragEventArgs e)
+    {
+        prevX = Image.X;
+        prevY = Image.Y;
+
+        startX = e.ClientX;
+        startY = e.ClientY;
+    }
+
+    private void DragEnd(DragEventArgs e)
+    {
+        ApplyCoordinates(e.ClientX, e.ClientY);
+    }
+
+    private void ApplyCoordinates(double x, double y)
+    {
+        double newX = prevX + (x - startX);
+        double newY = prevY + (y - startY);
+
+        newX = Math.Max(0, newX);
+        newY = Math.Max(0, newY);
+
+        newX = Math.Min(newX, (CanvasWidth - Image.Width));
+        newY = Math.Min(newY, (CanvasHeight - Image.Height));
+
+        Image.X = newX;
+        Image.Y = newY;
+    }
+}
