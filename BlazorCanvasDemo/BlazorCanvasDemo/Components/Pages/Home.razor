@@ -1,0 +1,70 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<div style="background-color: mediumslateblue; height: @(canvasHeight)px; width: @(canvasWidth)px; position: relative;">
+    <img src="images/1.jpg"
+         height="@imgHeight" width="@imgWidth"
+         style="position: absolute; top: @(top)px; left: @(left)px;"
+         @ondrag="Drag"
+         @ondragstart="DragStart"
+         @ondragend="DragEnd"
+         />
+</div>
+
+
+@code {
+    private double top = 100;
+    private double left = 50;
+
+    private double startX;
+    private double startY;
+
+    private double prevTop;
+    private double prevLeft;
+
+    private double imgWidth = 200;
+    private double imgHeight = 200;
+
+    private double canvasWidth = 800;
+    private double canvasHeight = 600;
+
+    private void Drag(DragEventArgs e)
+    {
+        ApplyCoordinates(e.ClientX, e.ClientY);
+    }
+
+    private void DragStart(DragEventArgs e)
+    {
+        prevTop = top;
+        prevLeft = left;
+
+        startX = e.ClientX;
+        startY = e.ClientY;
+    }
+
+    private void DragEnd(DragEventArgs e)
+    {
+        ApplyCoordinates(e.ClientX, e.ClientY);
+    }
+
+    private void ApplyCoordinates(double x, double y)
+    {
+        double newTop = prevTop + (y - startY);
+        double newLeft = prevLeft + (x - startX);
+
+        newTop = Math.Max(0, newTop);
+        newLeft = Math.Max(0, newLeft);
+
+        newTop = Math.Min(newTop, (canvasHeight - imgHeight));
+        newLeft = Math.Min(newLeft, (canvasWidth - imgWidth));
+
+        top = newTop;
+        left = newLeft;
+    }
+}
