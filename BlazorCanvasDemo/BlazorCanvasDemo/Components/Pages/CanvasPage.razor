@@ -1,0 +1,38 @@
+﻿@page "/Canvas"
+@using Excubo.Blazor.Canvas
+@rendermode InteractiveServer
+
+<button class="btn btn-primary my-3" @onclick="DrawRect">Dodaj kwadrat</button>
+<Canvas @ref="_canvas" Width="@_width" Height="@_height" />
+
+@code{
+    private Canvas _canvas;
+    private int _count = 0;
+    private int _x = 0;
+    private int _y = 0;
+    private int _width = 800;
+    private int _height = 600;
+
+    private Excubo.Blazor.Canvas.Contexts.Context2D _context;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _context = await _canvas.GetContext2DAsync();
+    }
+
+    private async Task DrawRect()
+    {
+        await using (var batch = _context.CreateBatch())
+        {
+            await batch.FillAndStrokeStyles.FillStyleAsync("pink");
+            await batch.FillRectAsync(_x, _y, 10, 10);
+        }
+
+        _x += 15;
+        if (_x > _width - 10)
+        {
+            _x = 0;
+            _y += 15;
+        }
+    }
+}
