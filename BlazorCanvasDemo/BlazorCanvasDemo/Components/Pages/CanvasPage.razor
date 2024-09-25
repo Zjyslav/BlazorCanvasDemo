@@ -1,9 +1,22 @@
 ﻿@page "/Canvas"
+@using BlazorCanvasDemo.Models
 @using Excubo.Blazor.Canvas
 @rendermode InteractiveServer
+@inject IJSRuntime JS
 
-<button class="btn btn-primary my-3" @onclick="DrawRect">Dodaj kwadrat</button>
-<Canvas @ref="_canvas" Width="@_width" Height="@_height" />
+<div class="d-flex flex-column">
+    <button class="btn btn-primary my-3" @onclick="RenderImages">Renderuj</button>
+    <div class="border border-2 me-auto">
+        <Canvas @ref="_canvas" Width="@_width" Height="@_height" />
+    </div>
+</div>
+
+<div hidden>
+    @foreach (var image in _images)
+    {
+        <img id="@image.ElementId" src="@image.Source" />
+    }
+</div>
 
 @code{
     private Canvas _canvas;
@@ -12,6 +25,13 @@
     private int _y = 0;
     private int _width = 800;
     private int _height = 600;
+
+    private List<DraggableImageModel> _images =
+    [
+    new(){ Source="images/1.jpg", Height=100, Width=100, X = 10, Y = 11, },
+    new(){ Source="images/2.jpg", Height=50, Width=50, X = 250, Y = 100, },
+    new(){ Source="images/3.jpg", Height=150, Width=150, X = 500, Y = 200, },
+    ];
 
     private Excubo.Blazor.Canvas.Contexts.Context2D _context;
 
@@ -33,6 +53,21 @@
         {
             _x = 0;
             _y += 15;
+        }
+    }
+
+    private async Task RenderImages()
+    {
+        await using var batch = _context.CreateBatch();
+
+        await batch.ClearRectAsync(0, 0, _width, _height);
+
+        int i = 0;
+        foreach (var image in _images)
+        {
+            await JS.InvokeVoidAsync("eval", $"image{i} = document.getElementById('{image.ElementId}')");
+            await batch.DrawingImages.DrawImageAsync($"image{i}", image.X, image.Y, image.Width, image.Height);
+            i++;
         }
     }
 }
