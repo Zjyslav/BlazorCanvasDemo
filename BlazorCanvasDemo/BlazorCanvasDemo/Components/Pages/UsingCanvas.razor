@@ -4,10 +4,12 @@
 @rendermode InteractiveServer
 @inject IJSRuntime JS
 
-<div class="d-flex flex-column">
-    <span>Selected image: @(_selectedImage is null ? "None" : _selectedImage.Source)</span>
-    <div class="border border-2 me-auto">
-        <Canvas @ref="_canvas" Width="@_width" Height="@_height" @onclick="OnClick" />
+<div style="height: 99vh; margin: 0; padding: 0;">
+    <div style="height: 5%;">
+        <div>Selected image: @(_selectedImage is null ? "None" : _selectedImage.Source)</div>
+    </div>
+    <div style="height: 95%;">
+        <Canvas id="@_canvasId" @ref="_canvas" Width="@_width" Height="@_height" @onclick="OnClick" style="height: 100%; max-height: 100%; max-width: 100%; object-fit: contain" />
     </div>
 </div>
 
@@ -23,19 +25,21 @@
     private int _count = 0;
     private int _x = 0;
     private int _y = 0;
-    private int _width = 800;
-    private int _height = 600;
+    private int _width = 300;
+    private int _height = 400;
 
     private List<DraggableImageModel> _images =
     [
     new(){ Source="images/1.jpg", Height=100, Width=100, X = 10, Y = 11, },
     new(){ Source="images/2.jpg", Height=50, Width=50, X = 250, Y = 100, },
-    new(){ Source="images/3.jpg", Height=150, Width=150, X = 500, Y = 200, },
+    new(){ Source="images/3.jpg", Height=150, Width=150, X = 30, Y = 200, },
     ];
 
     private DraggableImageModel? _selectedImage = null;
 
     private Excubo.Blazor.Canvas.Contexts.Context2D _context;
+
+    private string _canvasId = "my-canvas";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -65,20 +69,32 @@
 
         await batch.ClearRectAsync(0, 0, _width, _height);
 
+        await batch.FillAndStrokeStyles.FillStyleAsync("slateblue");
+        await batch.DrawingRectangles.FillRectAsync(0, 0, _width, _height);
+
         int i = 0;
         foreach (var image in _images)
         {
             await JS.InvokeVoidAsync("eval", $"image{i} = document.getElementById('{image.ElementId}')");
             await batch.DrawingImages.DrawImageAsync($"image{i}", image.X, image.Y, image.Width, image.Height);
+            if (image == _selectedImage)
+            {
+                await batch.StrokeStyleAsync("red");
+                await batch.LineWidthAsync(3);
+                await batch.StrokeRectAsync(image.X, image.Y, image.Width, image.Height);
+            }
             i++;
         }
     }
 
-    private void OnClick(MouseEventArgs e)
+    private async Task OnClick(MouseEventArgs e)
     {
+        double actualHeight = await JS.InvokeAsync<double>("eval", $"document.getElementById('{_canvasId}').clientHeight");
+        double actualWidth = await JS.InvokeAsync<double>("eval", $"document.getElementById('{_canvasId}').clientWidth");
+
         _selectedImage = null;
-        var x = e.OffsetX;
-        var y = e.OffsetY;
+        var x = e.OffsetX * _width / actualWidth;
+        var y = e.OffsetY * _height / actualHeight;
 
         foreach (var image in _images)
         {
@@ -88,5 +104,7 @@
                 break;
             }
         }
+
+        await RenderImages();
     }
 }
