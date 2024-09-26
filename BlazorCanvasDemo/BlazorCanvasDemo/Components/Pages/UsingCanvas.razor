@@ -5,9 +5,9 @@
 @inject IJSRuntime JS
 
 <div class="d-flex flex-column">
-    <button class="btn btn-primary my-3" @onclick="RenderImages">Renderuj</button>
+    <span>Selected image: @(_selectedImage is null ? "None" : _selectedImage.Source)</span>
     <div class="border border-2 me-auto">
-        <Canvas @ref="_canvas" Width="@_width" Height="@_height" />
+        <Canvas @ref="_canvas" Width="@_width" Height="@_height" @onclick="OnClick" />
     </div>
 </div>
 
@@ -33,11 +33,14 @@
     new(){ Source="images/3.jpg", Height=150, Width=150, X = 500, Y = 200, },
     ];
 
+    private DraggableImageModel? _selectedImage = null;
+
     private Excubo.Blazor.Canvas.Contexts.Context2D _context;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         _context = await _canvas.GetContext2DAsync();
+        await RenderImages();
     }
 
     private async Task DrawRect()
@@ -68,6 +71,22 @@
             await JS.InvokeVoidAsync("eval", $"image{i} = document.getElementById('{image.ElementId}')");
             await batch.DrawingImages.DrawImageAsync($"image{i}", image.X, image.Y, image.Width, image.Height);
             i++;
+        }
+    }
+
+    private void OnClick(MouseEventArgs e)
+    {
+        _selectedImage = null;
+        var x = e.OffsetX;
+        var y = e.OffsetY;
+
+        foreach (var image in _images)
+        {
+            if (x >= image.X && x <= image.X + image.Width && y >= image.Y && y <= image.Y + image.Height)
+            {
+                _selectedImage = image;
+                break;
+            }
         }
     }
 }
